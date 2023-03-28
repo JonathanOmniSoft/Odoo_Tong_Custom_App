@@ -1,0 +1,8 @@
+<templates>
+    <t t-extend="ImportView.side_panel">
+        <t t-jquery=".o_import_formatting" t-operation="after">
+            <h4 class="mt-3">Testing by Jonathan</h4>
+        </t>
+    </t>
+</templates>
+

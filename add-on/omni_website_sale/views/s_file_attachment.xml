@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="s_file_attachment" inherit_id="website_sale.product" >
+        <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="before">
+            <div id="o_omni_customizer_wrapper" class="mb-4">
+                <ul t-attf-class="list-unstyled js_add_cart_variants mb-0 column" t-att-data-attribute_exclusions="json.dumps(attribute_exclusions)" name="ul_omni_customizer" id="ul_omni_customizer">
+
+                    <li class="variant_attribute mb-4" id="li_omni_customizer">
+                        <t t-if="product.ecomm_file_upload == True">
+                            <strong class="attribute_name">FILE UPLOAD</strong>
+                            <ul id="omni_file_upload" t-attf-class="btn-group-toggle list-inline list-unstyled o_wsale_product_attribute single_and_custom" data-bs-toggle="buttons">
+                                <li t-attf-class="o_variant_pills btn btn-primary mb-1 list-inline-item js_attribute_value">
+                                    <input class="text-center" id="omni_attachments" type="file" name="omni_attachments" multiple="true" data-show-upload="true"
+                                           data-show-caption="true" accept="image/*,application/pdf,video/*" lass="file" data-show-preview="true" required="False"
+                                           data-action="o_attachment"/>
+                                    <div class="radio_input_value o_variant_pills_input_value">
+                                        <h6>Restriction input here</h6>
+                                    </div>
+                                </li>
+                            </ul>
+                        </t>
+                    </li>
+
+                </ul>
+            </div>
+        </xpath>
+    </template>
+</odoo>

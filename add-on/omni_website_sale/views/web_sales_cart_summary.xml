@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="cart_summary_inherit_website_sale_atttachment" inherit_id="website_sale.cart_lines">
+        <xpath expr="//td[hasclass('td-product_name')]" position="inside">
+            <div class="text-muted d-none d-md-block small">
+                <span t-if="line.website_attachment_ids" t-esc="line._get_attachment_order_line()"/>
+                <p>Testing 1 2 e</p>
+            </div>
+        </xpath>
+    </template>
+
+
+</odoo>

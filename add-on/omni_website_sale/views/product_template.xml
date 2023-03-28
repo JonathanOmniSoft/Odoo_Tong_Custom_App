@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record model="ir.ui.view" id="product_template_website_upload_form_view">
+        <field name="name">product.template.product.website.upload.form.view</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='sales']/group[@name='sale']" position="after">
+                <group string="eCommerce File Upload" name="ecomm_file_upload_setting" attrs="{'invisible': [('sale_ok','=',False)]}">
+                    <field name ='ecomm_file_upload' />
+                    <field name="ecomm_file_upload_rules" widget="radio" string="File Upload Setting" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

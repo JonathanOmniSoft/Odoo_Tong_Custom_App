@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="website_sale_order_attachment_form_view" model="ir.ui.view">
+        <field name="name">sale.order.view.form.inherit.websale.attachment</field>
+        <field name="model">sale.order</field>
+        <field name="priority" eval="40" />
+        <field name="inherit_id" ref="sale.view_order_form" />
+        <field name="arch" type="xml">
+           <xpath expr="//field[@name='order_line']/tree//field[@name='name']" position="after">
+                    <field name="website_attachment_url" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

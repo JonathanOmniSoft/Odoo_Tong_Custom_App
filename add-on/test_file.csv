@@ -1,0 +1,11 @@
+No. Rekening,=,'061234
+Nama,=,Alibaba
+Mata Uang,=,IDR
+
+Tanggal,Keterangan,Cabang,Jumlah,,Saldo
+'04/01,Alibaba MID : 1234 ART         QR :    1325422.00DDR:       9277.95,'1234,1316144.05,CR,164578194.61
+'05/01,Alibaba DEBIT 05/01,'0000,1600000.00,DB,169748460.32
+Saldo Awal,=,163262050.56
+Kredit,=,8086409.76
+Debet,=,1600000.00
+Saldo Akhir,=,169748460.32
