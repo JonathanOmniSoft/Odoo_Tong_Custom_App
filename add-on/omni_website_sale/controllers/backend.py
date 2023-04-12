@@ -2,18 +2,18 @@
 import re
 import os
 import json
+
+import base64
 import pickle
 import requests
+
+from io import BytesIO
+from urllib.request import urlopen
 from datetime import datetime, timedelta, time
 
-from google.oauth2.credentials import Credentials
-from pydrive.drive import GoogleDrive
-from pydrive.auth import GoogleAuth
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 from google.oauth2 import service_account
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
 
 
 from odoo.http import request
@@ -51,36 +51,43 @@ mine_types = {
 
 class WebsiteSaleBackend(WebsiteBackend):
 
+    def str_to_dict(self, string):
+        # remove the curly braces from the string
+        string = string.strip('{}')
+
+        # split the string into key-value pairs
+        pairs = string.split(', ')
+
+        # use a dictionary comprehension to create the dictionary, converting the values to integers and removing the quotes from the keys
+        return {key[1:-2]: int(value) for key, value in (pair.split(': ') for pair in pairs)}
+
     @http.route('/shop/upload_attachment/<model("product.template"):product>', type='http', auth="public", website=True)
     def omni_upload_files(self, product, **post):
-        print("omni_upload_files controller")
-
-        directory_path = os.path.join(os.path.expanduser('~'), 'grive')
+        website_id = request.website.id
         user = request.env.user.partner_id
-        # Setup Google credentials
-        client_secret_file = os.path.join(directory_path,  'omnisoft-solution.json')
         scopes = ['https://www.googleapis.com/auth/drive']
-        google_folder_id = '1PuOXgSr1Z6NCqx5sFVxz2sxpIJvVd-q-'
+
+        website = request.env['website'].search([('id', '=', website_id)])
+        google_folder_id = website.google_drive_folder_id
         API_NAME = 'drive'
         API_VERSION = 'v3'
 
-        credentials = service_account.Credentials.from_service_account_file(client_secret_file)
+        service_account_info = r'''{0}'''.format(website.google_service_account_credentials)
+
+        dic = json.loads(service_account_info)
+        credentials = service_account.Credentials.from_service_account_info(dic)
         scoped_credentials = credentials.with_scopes(scopes)
-        service = build(API_NAME, API_VERSION, credentials=scoped_credentials)
+        service = build(API_NAME, API_VERSION, credentials=scoped_credentials, cache_discovery=False)
 
         # Get the file from post request
         product_template = product
         product_product = ""
 
         if post.get('attachment', False):
+
             name = post.get('attachment').filename
             file = post.get('attachment')
             file_format = '.' + name.split('.')[-1]
-
-            os.makedirs(directory_path, exist_ok=True)
-            file.save(os.path.join(directory_path, name))
-
-            print("post['attribute'] = ", post['attribute'])
 
             if post['attribute']:
                 attribute = None
@@ -95,8 +102,9 @@ class WebsiteSaleBackend(WebsiteBackend):
                 'parents': [google_folder_id],
             }
 
-            data = MediaFileUpload(os.path.join(directory_path, name), mimetype=mine_types[file_format], resumable=True)
+            fh = BytesIO(file.read())
 
+            data = MediaIoBaseUpload(fh, mimetype=mine_types[file_format], resumable=True)
             google_file = (service.files().create(
                 body=google_file_metadata,
                 media_body = data,
@@ -105,16 +113,14 @@ class WebsiteSaleBackend(WebsiteBackend):
 
             # Create google share link
             sharable_link_response = service.files().get(fileId=google_file['id'], fields='webViewLink').execute()
-
-            request.env['website.attachment'].sudo().create({
+            attachment_id = request.env['website.attachment'].sudo().create({
                 'partner_id': user.id,
-                # 'product_template_id': product_template.id,
                 'product_product_id': product_product.id,
                 'attachment_name': name,
                 'attachment_url': sharable_link_response['webViewLink']
             })
 
-            return json.dumps({'status': 'success'})
+            return json.dumps({'status': 'success', 'attachment_id': attachment_id.id})
         else:
             print("No attachment found")
             return json.dumps({'status': 'error'})
@@ -132,20 +138,25 @@ class WebsiteSaleInherit(WebsiteSale):
             - When adding a product to cart on the same page (without redirection).
         """
 
-        res = super(WebsiteSaleInherit, self).cart_update_json(product_id=product_id, line_id=False, add_qty=add_qty, set_qty=set_qty, display=display,
-            product_custom_attribute_values=product_custom_attribute_values, no_variant_attribute_values=no_variant_attribute_values, **kw)
+        if "attachment_ids" in kw or "force_create" in kw:
+            res = super(WebsiteSaleInherit, self).cart_update_json(product_id=product_id, line_id=False, add_qty=add_qty,
+                                                               set_qty=set_qty, display=display,
+                                                               product_custom_attribute_values=product_custom_attribute_values,
+                                                               no_variant_attribute_values=no_variant_attribute_values, **kw)
+            if "attachment_ids" in kw:
 
-        print(f"{request.env.user.partner_id=}")
-        user_id = request.env.user.partner_id.id
+                sales_order_line = request.env['sale.order.line'].sudo().search([('id', '=', res['line_id'])])
+                attachment_id = request.env['website.attachment'].sudo().search([('id', '=', kw.get('attachment_ids'))])
+                sales_order_line.website_attachment_ids = attachment_id
+                sales_order_line.website_attachment_url = "<li><a href='" + attachment_id.attachment_url + "'>" + attachment_id.attachment_name + "</a></li>"
 
-        print(f"{kw=}")
+            return res
 
-
-        print(f"{line_id=}")
-        print(f"{product_id=}")
-
-        sales_order_line = request.env['sale.order.line'].sudo().search([('id', '=', res['line_id'])])
-        print(f"{sales_order_line=}")
-        sales_order_line.website_attachment_ids = request.env['website.attachment'].sudo().search([('partner_id', '=', user_id), ('product_product_id', '=', product_id)])
-
+        res = super(WebsiteSaleInherit, self).cart_update_json(
+            product_id=product_id, line_id=line_id, add_qty=add_qty,
+            set_qty=set_qty, display=display,
+            product_custom_attribute_values=product_custom_attribute_values,
+            no_variant_attribute_values=no_variant_attribute_values,
+            **kw)
+        
         return res

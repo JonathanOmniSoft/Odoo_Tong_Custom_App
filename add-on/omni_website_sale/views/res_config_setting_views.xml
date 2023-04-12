@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- Uncomment me when related modules are migrated-->
+        <record id="res_config_settings_view_form_google" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.google</field>
+            <field name="model">res.config.settings</field>
+            <field name="priority" eval="25" />
+            <field name="inherit_id" ref="website.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <div id="website_info_settings" position="after">
+                    <h2>Google Account</h2>
+                    <div class="row mt16 o_settings_container" id="website_google_credential">
+                        <div class="col-12 col-lg-6 o_setting_box" id="website_google_settings">
+                            <div class="o_setting_right_pane">
+                                <label for="google_service_account_credentials" string="Google Service Account Credentials"/>
+                                <field name="google_service_account_credentials" placeholder="Paste content of the JSON file here"/>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box" id="website_google_drive_folder">
+                            <div class="o_setting_right_pane border-start-0">
+                                <div class="content-group">
+                                    <div class="row mt8">
+                                        <label for="google_drive_folder_id" class="col-lg-5" string="Google Drive Folder ID"/>
+                                        <field name="google_drive_folder_id" placeholder="Paste Google Drive Folder ID "/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </field>
+        </record>
+
+
+        <record id="google_drive_config_settings_action" model="ir.actions.act_window">
+            <field name="name">Google Credential</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">res.config.settings</field>
+            <field name="view_mode">form</field>
+            <field name="target">inline</field>
+            <field name="context">{'module': 'website', 'bin_size': False}</field>
+        </record>
+
+        <menuitem id="Website_config_settings_menu"
+                name="Google Credential"
+                parent="website.menu_website_global_configuration"
+                sequence="10"
+                action="google_drive_config_settings_action"
+                groups="base.group_user"/>
+
+    </data>
+</odoo>

@@ -13,11 +13,12 @@
         # Security
         'security/ir.model.access.csv',
 
-        # Views
+        # Views,
+        "views/res_config_setting_views.xml",
         'views/product_template.xml',
         'views/s_file_attachment.xml',
         'views/sale_order.xml',
-        'views/web_sales_cart_summary.xml',
+        'views/web_sales_cart_summary.xml'
     ],
     'installable': True,
     'auto_install': True,
